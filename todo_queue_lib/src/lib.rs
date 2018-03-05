@@ -1,4 +1,7 @@
-use list;
+mod list;
+mod query;
+mod range;
+mod lists;
 
 #[cfg(test)]
 mod tests {
