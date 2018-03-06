@@ -11,6 +11,7 @@ extern crate todo_queue_lib;
 
 mod list;
 mod app;
+mod error;
 
 fn main() {
     let app = app::App::load_config_from_default_location();
