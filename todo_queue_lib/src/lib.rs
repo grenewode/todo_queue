@@ -1,7 +1,9 @@
+extern crate uuid;
+
 mod list;
 mod query;
 mod range;
-mod lists;
+mod script;
 
 #[cfg(test)]
 mod tests {

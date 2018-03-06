@@ -1,6 +1,7 @@
 use std::ops::{Add, Mul};
 use std::cmp::PartialOrd;
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum Limit<T> {
     Includes(T),
     Excludes(T),
@@ -57,15 +58,33 @@ impl<T> Limit<T> {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct Range<T> {
     low: Limit<T>,
     high: Limit<T>,
+}
+
+impl<T> From<T> for Range<T>
+where
+    T: PartialOrd + Clone,
+{
+    fn from(value: T) -> Self {
+        Range::eq(value)
+    }
 }
 
 impl<T> Range<T>
 where
     T: PartialOrd,
 {
+    pub fn eq<O>(o: O) -> Self
+    where
+        O: Into<T>,
+        T: Clone,
+    {
+        let value = o.into();
+        Self::new(Limit::Includes(value.clone()), Limit::Excludes(value))
+    }
     pub fn new(low: Limit<T>, high: Limit<T>) -> Self {
         Self { low, high }
     }

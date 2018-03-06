@@ -1,0 +1,70 @@
+use std::str::FromStr;
+use range::{Limit, Range};
+use list::{ItemDesc, Status};
+use query::{Filter, Query};
+
+grammar;
+
+low_bound<T>: Limit<T> = {
+    "(" <low:T> => Limit::Excludes(low),
+    "[" <low:T> => Limit::Includes(low),
+    "(" "inf"   => Limit::Inf,
+    "[" "inf"   => Limit::Inf,
+    "("         => Limit::Inf,
+    "["         => Limit::Inf,
+};
+
+high_bound<T>: Limit<T> = {
+    <high:T> ")" => Limit::Excludes(high),
+    <high:T> "]" => Limit::Includes(high),
+    "inf"    ")" => Limit::Inf,
+    "inf"    "]" => Limit::Inf,
+             ")" => Limit::Inf,
+             "]" => Limit::Inf,
+};
+
+range<T>: Range<T> = {
+    <low:low_bound<T>> "..." <high:high_bound<T>> => Range::new(low, high),
+    <v:T> => Range::eq(v)
+};
+
+pub status: Status = {
+    r"%[Ww]ait(ing)?"   => Status::Waiting,
+    r"%[Qq](ueuing|ueue(d?))"   => Status::Queuing,
+    r"%[Ww]ork(ing)?"   => Status::Working,
+    r"%[Cc]omplet(ed)?" => Status::Completed,
+};
+
+pub range_status = range<status>;
+
+simple_filter: Filter = {
+    <r"#\w+"> => Filter::Tag(<>.chars().skip(1).collect()),
+    "status" "=" <range_status> => Filter::status(<>),
+    <range_status> => Filter::status(<>),
+    r"[[:alpha:]]+" => Filter::name(<>),
+    "(" <filter> ")",
+    not <simple_filter> => !<>
+};
+
+and = { "and", "AND", "&&", "&"};
+or = { "or", "OR", "||", "|", "," };
+
+and_filter: Filter = {
+    <a:simple_filter> and <b:and_filter> => a & b,
+    <simple_filter>,
+};
+
+or_filter: Filter = {
+    <a:and_filter> or <b:or_filter> => a | b,
+    <a:and_filter> <b:or_filter> => a | b,
+    <and_filter>,
+};
+
+not = { "!", "~", "not" };
+
+pub filter = { <or_filter> };
+
+pub query: Query = {
+    <head:query> "=>" <end:filter> => head.then(end),
+    <filter> => <>.into()
+};
