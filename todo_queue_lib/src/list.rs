@@ -2,7 +2,7 @@ use uuid::Uuid;
 
 use query::Filter;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub enum Status {
     Waiting,
     Queuing,
