@@ -1,4 +1,6 @@
 extern crate app_dirs;
+#[macro_use]
+extern crate failure;
 extern crate rustyline;
 extern crate serde;
 #[macro_use]
