@@ -6,6 +6,6 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate todo_queue_lib;
 
-fn main() {
-    println!("Hello, world!");
-}
+mod list;
+
+fn main() {}
