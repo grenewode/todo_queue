@@ -35,7 +35,7 @@ impl AppConfig {
     pub fn load(config_path: PathBuf) -> Result<Self> {
         if !config_path.exists() {
             let app = Self::default_with_path(config_path);
-            app.save_pretty();
+            app.save_pretty().context(ErrorKind::SaveConfig)?;
             Ok(app)
         } else {
             let config_file = File::open(config_path).context(ErrorKind::LoadConfig)?;
