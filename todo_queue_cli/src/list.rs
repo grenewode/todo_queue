@@ -10,6 +10,11 @@ pub struct NativeItem {
     tags: HashSet<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NativeList {
+    items: Vec<(ItemId, NativeItem)>,
+}
+
 impl From<ItemDesc> for NativeItem {
     fn from(item: ItemDesc) -> Self {
         let ItemDesc {
@@ -26,11 +31,6 @@ impl From<ItemDesc> for NativeItem {
             tags: tags.into_iter().collect(),
         }
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct NativeList {
-    items: Vec<(ItemId, NativeItem)>,
 }
 
 impl Item for NativeItem {
