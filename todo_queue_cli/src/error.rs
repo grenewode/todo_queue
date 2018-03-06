@@ -14,6 +14,10 @@ pub enum ErrorKind {
     LoadConfig,
     #[fail(display = "failed to save config")]
     SaveConfig,
+    #[fail(display = "failed to load list")]
+    LoadList,
+    #[fail(display = "failed to save list")]
+    SaveList,
 }
 
 pub type Result<T> = result::Result<T, Error>;
