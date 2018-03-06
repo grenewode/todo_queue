@@ -1,6 +1,7 @@
-use uuid::Uuid;
-
 use query::Filter;
+use std::fmt::{self, Display, Formatter};
+use std::str::FromStr;
+use std::num::ParseIntError;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub enum Status {
@@ -124,7 +125,27 @@ impl From<String> for ItemDesc {
     }
 }
 
-pub type ItemId = Uuid;
+#[derive(Debug, Hash, PartialEq, PartialOrd, Eq, Ord, Copy, Clone, Serialize, Deserialize)]
+pub struct ItemId(u64);
+
+impl Display for ItemId {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "0x{:x}", self.0)
+    }
+}
+
+impl FromStr for ItemId {
+    type Err = ParseIntError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        u64::from_str_radix(s, 16).map(ItemId)
+    }
+}
+
+impl From<u64> for ItemId {
+    fn from(x: u64) -> Self {
+        ItemId(x)
+    }
+}
 
 pub trait List {
     type Item: ?Sized + Item;

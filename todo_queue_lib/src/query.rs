@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 use std::mem;
 
@@ -10,6 +9,7 @@ use list::Status;
 pub enum Filter {
     All,
     None,
+    Id(ItemId),
     Status(Range<Status>),
     Tag(String),
     Name(String),
@@ -29,6 +29,10 @@ impl Filter {
 
     pub fn name<T: Into<String>>(name: T) -> Self {
         Filter::Name(name.into())
+    }
+
+    pub fn id<I: Into<ItemId>>(id: I) -> Self {
+        Filter::Id(id.into())
     }
 }
 
@@ -96,7 +100,7 @@ impl BitOr for Filter {
 }
 
 impl Filter {
-    pub fn matches(&self, item: &Item) -> bool {
+    pub fn matches(&self, item_id: &ItemId, item: &Item) -> bool {
         use self::Filter::*;
         match *self {
             All => true,
@@ -104,9 +108,10 @@ impl Filter {
             Status(ref status) => status.contains(item.get_status()),
             Tag(ref tag) => item.has_tag(tag),
             Name(ref name) => name == item.get_name(),
-            And(ref all) => all.iter().all(|cond| cond.matches(item)),
-            Or(ref any) => any.iter().any(|cond| cond.matches(item)),
-            Not(ref cond) => !cond.matches(item),
+            And(ref all) => all.iter().all(|cond| cond.matches(item_id, item)),
+            Or(ref any) => any.iter().any(|cond| cond.matches(item_id, item)),
+            Not(ref cond) => !cond.matches(item_id, item),
+            Id(ref id) => item_id == id,
         }
     }
 }

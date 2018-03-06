@@ -43,6 +43,7 @@ simple_filter: Filter = {
     <r"#\w+"> => Filter::Tag(<>.chars().skip(1).collect()),
     "status" "=" <range_status> => Filter::status(<>),
     <range_status> => Filter::status(<>),
+    r"@[[:xdigit:]]+" => Filter::Id(<>[1..].parse().unwrap()),
     r"[[:alpha:]]+" => Filter::name(<>),
     "(" <filter> ")",
     not <simple_filter> => !<>
