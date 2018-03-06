@@ -1,5 +1,7 @@
 #[cfg_attr(rustfmt, rustfmt_skip)] mod parser;
 
+pub use self::parser::parse_query;
+
 #[cfg(test)]
 mod tests {
     use super::parser::*;

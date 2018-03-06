@@ -1,14 +1,6 @@
 extern crate uuid;
 
-mod list;
-mod query;
-mod range;
-mod script;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub mod list;
+pub mod query;
+pub mod range;
+pub mod script;
