@@ -8,6 +8,8 @@ use list::Status;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Filter {
+    All,
+    None,
     Status(Range<Status>),
     Tag(String),
     Name(String),
@@ -97,6 +99,8 @@ impl Filter {
     pub fn matches(&self, item: &Item) -> bool {
         use self::Filter::*;
         match *self {
+            All => true,
+            None => false,
             Status(ref status) => status.contains(item.get_status()),
             Tag(ref tag) => item.has_tag(tag),
             Name(ref name) => name == item.get_name(),

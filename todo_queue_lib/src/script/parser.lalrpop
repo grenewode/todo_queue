@@ -38,6 +38,8 @@ pub status: Status = {
 pub range_status = range<status>;
 
 simple_filter: Filter = {
+    "all" => Filter::All,
+    "none" => Filter::None,
     <r"#\w+"> => Filter::Tag(<>.chars().skip(1).collect()),
     "status" "=" <range_status> => Filter::status(<>),
     <range_status> => Filter::status(<>),
