@@ -1,3 +1,4 @@
+extern crate app_dirs;
 extern crate rustyline;
 extern crate serde;
 #[macro_use]
