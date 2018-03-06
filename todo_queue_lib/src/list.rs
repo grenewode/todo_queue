@@ -91,10 +91,10 @@ impl Item for ItemDesc {
 
 impl From<String> for ItemDesc {
     fn from(string: String) -> Self {
-        let mut string = string;
+        let string = string;
 
         let mut tags = Vec::new();
-        let mut name_description = String::new();
+        let mut name = String::new();
 
         let mut chars = string.chars();
 
@@ -103,7 +103,7 @@ impl From<String> for ItemDesc {
                 let mut tag = String::new();
                 while let Some(t) = chars.next() {
                     if t.is_whitespace() || t == ':' {
-                        name_description.push(t);
+                        name.push(t);
                         break;
                     } else {
                         tag.push(t)
@@ -111,15 +111,15 @@ impl From<String> for ItemDesc {
                 }
                 tags.push(tag)
             } else {
-                name_description.push(c)
+                name.push(c)
             }
         }
 
-        if let Some(name_sep_idx) = name_description.find(":") {
-            let name = name_description.split_off(name_sep_idx);
+        if let Some(name_sep_idx) = name.find(":") {
+            let name_description = name.split_off(name_sep_idx);
             ItemDesc::new(name, name_description, tags)
         } else {
-            ItemDesc::new(name_description, "", tags)
+            ItemDesc::new(name, "", tags)
         }
     }
 }
