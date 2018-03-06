@@ -16,6 +16,5 @@ mod app;
 mod error;
 
 fn main() {
-    let app_config = app::AppConfig::load_config_from_default_location().unwrap();
-    let app = app_config.launch().unwrap();
+    let _ = app::run_cli().unwrap();
 }

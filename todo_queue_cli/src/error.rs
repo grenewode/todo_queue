@@ -8,6 +8,18 @@ pub struct Error {
     inner: Context<ErrorKind>,
 }
 
+#[derive(Debug, Fail)]
+#[fail(display = "a list named {} already exists", _0)]
+pub struct ListAlreadyExists(pub String);
+
+#[derive(Debug, Fail)]
+#[fail(display = "No list was selected")]
+pub struct NoListSelected;
+
+#[derive(Debug, Fail)]
+#[fail(display = "No list named {} exists", _0)]
+pub struct NoSuchListExists(pub String);
+
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail)]
 pub enum ErrorKind {
     #[fail(display = "failed to load config")]
@@ -16,10 +28,20 @@ pub enum ErrorKind {
     SaveConfig,
     #[fail(display = "failed to launch app")]
     Launch,
+    #[fail(display = "problem in the command line interface")]
+    Cli,
     #[fail(display = "failed to load list")]
     LoadList,
     #[fail(display = "failed to save list")]
     SaveList,
+    #[fail(display = "failed to save app")]
+    SaveApp,
+    #[fail(display = "failed to add list")]
+    AddList,
+    #[fail(display = "failed to remove list")]
+    RmList,
+    #[fail(display = "failed to get list")]
+    GetList,
 }
 
 pub type Result<T> = result::Result<T, Error>;

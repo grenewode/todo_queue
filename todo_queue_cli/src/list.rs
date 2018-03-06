@@ -116,7 +116,7 @@ impl NativeList {
         }
     }
 
-    pub fn save(&self) -> Result<()> {
+    pub fn save_pretty(&self) -> Result<()> {
         let file = File::create(&self.path).context(ErrorKind::SaveList)?;
         serde_json::to_writer_pretty(file, self).context(ErrorKind::SaveList)?;
         Ok(())
@@ -126,11 +126,15 @@ impl NativeList {
         let path = path.into();
         if !path.exists() {
             let list = Self::default_with_path(path);
-            list.save().context(ErrorKind::SaveList)?;
+            list.save_pretty().context(ErrorKind::SaveList)?;
             Ok(list)
         } else {
             let file = File::open(path).context(ErrorKind::LoadList)?;
             Ok(serde_json::from_reader(file).context(ErrorKind::LoadList)?)
         }
+    }
+
+    pub fn get_path(&self) -> &Path {
+        &self.path
     }
 }
