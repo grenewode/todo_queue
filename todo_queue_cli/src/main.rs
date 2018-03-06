@@ -8,5 +8,8 @@ extern crate serde_json;
 extern crate todo_queue_lib;
 
 mod list;
+mod app;
 
-fn main() {}
+fn main() {
+    let app = app::App::load_config_from_default_location();
+}
