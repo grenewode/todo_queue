@@ -1,7 +1,9 @@
 use std::result;
-use failure::{Context, Fail};
+use failure::{Backtrace, Context, Fail};
 use std::fmt::{self, Display, Formatter};
+pub use failure::ResultExt;
 
+#[derive(Debug)]
 pub struct Error {
     inner: Context<ErrorKind>,
 }
@@ -9,7 +11,9 @@ pub struct Error {
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail)]
 pub enum ErrorKind {
     #[fail(display = "failed to load config")]
-    LoadConfigError,
+    LoadConfig,
+    #[fail(display = "failed to save config")]
+    SaveConfig,
 }
 
 pub type Result<T> = result::Result<T, Error>;
@@ -44,7 +48,7 @@ impl From<ErrorKind> for Error {
     }
 }
 
-impl From<Context<ErrorKind>> for MError {
+impl From<Context<ErrorKind>> for Error {
     fn from(inner: Context<ErrorKind>) -> Self {
         Self { inner: inner }
     }
