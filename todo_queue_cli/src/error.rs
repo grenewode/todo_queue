@@ -14,6 +14,8 @@ pub enum ErrorKind {
     LoadConfig,
     #[fail(display = "failed to save config")]
     SaveConfig,
+    #[fail(display = "failed to launch app")]
+    Launch,
     #[fail(display = "failed to load list")]
     LoadList,
     #[fail(display = "failed to save list")]

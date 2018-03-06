@@ -4,6 +4,7 @@ use std::fs::File;
 use app_dirs::{self, AppDataType, AppInfo};
 use serde_json;
 use error::*;
+use list::NativeList;
 
 const APP_INFO: AppInfo = AppInfo {
     name: "todo_queue",
@@ -14,6 +15,11 @@ const APP_INFO: AppInfo = AppInfo {
 pub struct AppConfig {
     config_path: PathBuf,
     list_paths: HashMap<String, PathBuf>,
+}
+
+pub struct App {
+    lists: HashMap<String, NativeList>,
+    config: AppConfig,
 }
 
 impl AppConfig {
@@ -47,5 +53,16 @@ impl AppConfig {
         let config_file = File::create(&self.config_path).context(ErrorKind::SaveConfig)?;
         serde_json::to_writer_pretty(config_file, self).context(ErrorKind::LoadConfig)?;
         Ok(())
+    }
+
+    pub fn launch(self) -> Result<App> {
+        Ok(App {
+            lists: self.list_paths
+                .iter()
+                .map(|(name, path)| Ok((name.clone(), NativeList::load(&path)?)))
+                .collect::<Result<HashMap<_, _>>>()
+                .context(ErrorKind::Launch)?,
+            config: self,
+        })
     }
 }

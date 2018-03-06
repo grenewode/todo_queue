@@ -1,6 +1,10 @@
 use std::collections::HashSet;
 use todo_queue_lib::list::{Item, ItemDesc, ItemId, List, Status};
 use todo_queue_lib::query::Filter;
+use std::path::{Path, PathBuf};
+use std::fs::File;
+use serde_json;
+use error::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NativeItem {
@@ -13,6 +17,7 @@ pub struct NativeItem {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NativeList {
     items: Vec<(ItemId, NativeItem)>,
+    path: PathBuf,
 }
 
 impl From<ItemDesc> for NativeItem {
@@ -100,5 +105,32 @@ impl List for NativeList {
             .filter(|&&(_, ref item)| filter.matches(item))
             .map(|m| m.0)
             .collect()
+    }
+}
+
+impl NativeList {
+    fn default_with_path<P: Into<PathBuf>>(path: P) -> Self {
+        Self {
+            items: Vec::new(),
+            path: path.into(),
+        }
+    }
+
+    pub fn save(&self) -> Result<()> {
+        let file = File::create(&self.path).context(ErrorKind::SaveList)?;
+        serde_json::to_writer_pretty(file, self).context(ErrorKind::SaveList)?;
+        Ok(())
+    }
+
+    pub fn load<P: Into<PathBuf>>(path: P) -> Result<Self> {
+        let path = path.into();
+        if !path.exists() {
+            let list = Self::default_with_path(path);
+            list.save().context(ErrorKind::SaveList)?;
+            Ok(list)
+        } else {
+            let file = File::open(path).context(ErrorKind::LoadList)?;
+            Ok(serde_json::from_reader(file).context(ErrorKind::LoadList)?)
+        }
     }
 }
