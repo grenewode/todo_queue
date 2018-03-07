@@ -128,7 +128,7 @@ pub struct ItemId(u64);
 
 impl Display for ItemId {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "0x{:x}", self.0)
+        write!(f, "@{}", self.0)
     }
 }
 
