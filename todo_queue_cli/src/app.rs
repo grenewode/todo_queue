@@ -303,7 +303,7 @@ pub fn run_cli() -> Result<App> {
             } else {
                 "all".to_string()
             };
-            let query = script::parse_query(&query_str).context(ErrorKind::Cli)?;
+            let query = script::query_parser(&query_str).context(ErrorKind::Cli)?;
 
             app.cli_show_all(query, false);
         }
@@ -322,12 +322,13 @@ pub fn run_cli() -> Result<App> {
 
             list.save_pretty().context(ErrorKind::Cli)?;
         } else if let Some(delete_cmd) = todo_cmd.subcommand_matches("delete") {
-            let query_str = delete_cmd
+            let query_str: String = delete_cmd
                 .values_of("QUERY")
                 .unwrap()
                 .collect::<Vec<_>>()
                 .join(" ");
-            let query = script::parse_query(&query_str).context(ErrorKind::Cli)?;
+
+            let query = script::query_parser(&query_str).context(ErrorKind::Cli)?;
 
             for id in query.select(list) {
                 list.remove(&id);
