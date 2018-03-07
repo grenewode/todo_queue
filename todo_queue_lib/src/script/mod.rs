@@ -49,7 +49,7 @@ mod tests {
         assert!(parse_filter("").is_err());
         assert_eq!(parse_filter("hello"), Ok(Filter::name("hello")));
         assert_eq!(parse_filter("#tag"), Ok(Filter::tag("tag")));
-        assert_eq!(parse_filter("@0fcb"), Ok(Filter::id(0x0fcb)));
+        assert_eq!(parse_filter("@123"), Ok(Filter::id(123)));
         assert_eq!(
             parse_filter("hello goodbye"),
             Ok(Filter::name("hello") | Filter::name("goodbye"))
@@ -75,8 +75,8 @@ mod tests {
             Ok(!Filter::status(Status::Working) | !Filter::name("hello"))
         );
         assert_eq!(
-            parse_filter("!%work @fcb"),
-            Ok(!Filter::status(Status::Working) | Filter::id(0xfcb))
+            parse_filter("!%work @123"),
+            Ok(!Filter::status(Status::Working) | Filter::id(123))
         );
     }
 

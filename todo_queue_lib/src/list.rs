@@ -125,7 +125,7 @@ impl From<String> for ItemDesc {
     }
 }
 
-#[derive(Debug, Hash, PartialEq, PartialOrd, Eq, Ord, Copy, Clone, Serialize, Deserialize)]
+#[derive(Rand, Debug, Hash, PartialEq, PartialOrd, Eq, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct ItemId(u64);
 
 impl Display for ItemId {
@@ -137,7 +137,7 @@ impl Display for ItemId {
 impl FromStr for ItemId {
     type Err = ParseIntError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        u64::from_str_radix(s, 16).map(ItemId)
+        s.parse().map(ItemId)
     }
 }
 
