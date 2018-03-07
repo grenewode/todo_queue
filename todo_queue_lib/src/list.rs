@@ -82,10 +82,8 @@ impl Item for ItemDesc {
             if self.has_tag(tag) {
                 self.tags.push(tag.into())
             }
-        } else {
-            if let Some(pos) = self.tags.iter().position(|s| s == &tag) {
-                self.tags.remove(pos);
-            }
+        } else if let Some(pos) = self.tags.iter().position(|s| s == &tag) {
+            self.tags.remove(pos);
         }
     }
 }

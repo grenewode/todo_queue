@@ -1,6 +1,5 @@
-use std::str::FromStr;
 use range::{Limit, Range};
-use list::{ItemDesc, Status};
+use list::{Status};
 use query::{Filter, Query};
 
 grammar;
