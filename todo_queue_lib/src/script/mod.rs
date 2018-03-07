@@ -1,6 +1,13 @@
 #[cfg_attr(rustfmt, rustfmt_skip)] mod parser;
 
-pub use self::parser::parse_query;
+use self::parser::parse_query;
+use query::Query;
+
+use lalrpop_util::ParseError;
+
+pub fn query_parser(text: &str) -> Result<Query, ParseError<usize, String, String>> {
+    parse_query(text).map_err(|err| err.map_error(|s| s.into()).map_token(|t| t.1.into()))
+}
 
 #[cfg(test)]
 mod tests {
