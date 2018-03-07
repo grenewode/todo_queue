@@ -7,5 +7,5 @@ env:
   - RUST_PROJECT_DIR: todo_queue_cli
   - RUST_PROJECT_DIR: todo_queue_lib
 script:
-  - cd RUST_PROJECT_DIR && cargo build --verbose --all
-  - cd RUST_PROJECT_DIR && cargo test --verbose --all
+  - cd $RUST_PROJECT_DIR && cargo build --verbose --all
+  - cd $RUST_PROJECT_DIR && cargo test --verbose --all
