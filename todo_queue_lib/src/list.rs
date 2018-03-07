@@ -101,7 +101,7 @@ impl From<String> for ItemDesc {
             if c == '#' {
                 let mut tag = String::new();
                 while let Some(t) = chars.next() {
-                    if t.is_whitespace() || t == ':' {
+                    if t.is_whitespace() || t == '-' {
                         name.push(t);
                         break;
                     } else {
@@ -114,21 +114,28 @@ impl From<String> for ItemDesc {
             }
         }
 
-        if let Some(name_sep_idx) = name.find(":") {
-            let name_description = name.split_off(name_sep_idx);
+        if let Some(name_sep_idx) = name.find("-") {
+            let name_description = &name.split_off(name_sep_idx)[1..];
+
+            let name = name.trim();
+            let name_description = name_description.trim();
+
+            println!("{:?} {:?}", name, name_description);
+
             ItemDesc::new(name, name_description, tags)
         } else {
+            name.trim();
             ItemDesc::new(name, "", tags)
         }
     }
 }
 
 #[derive(Rand, Debug, Hash, PartialEq, PartialOrd, Eq, Ord, Clone, Copy, Serialize, Deserialize)]
-pub struct ItemId(u64);
+pub struct ItemId(u16);
 
 impl Display for ItemId {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "@{}", self.0)
+        write!(f, "@{:05}", self.0)
     }
 }
 
@@ -139,8 +146,8 @@ impl FromStr for ItemId {
     }
 }
 
-impl From<u64> for ItemId {
-    fn from(x: u64) -> Self {
+impl From<u16> for ItemId {
+    fn from(x: u16) -> Self {
         ItemId(x)
     }
 }
