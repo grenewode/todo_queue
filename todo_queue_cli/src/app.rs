@@ -6,7 +6,7 @@ use serde_json;
 use error::*;
 use list::NativeList;
 use todo_queue_lib::query::{Filter, Query};
-use todo_queue_lib::list::{Item, ItemDesc, List};
+use todo_queue_lib::list::{Item, ItemDesc, ItemId, List};
 use todo_queue_lib::script;
 
 const APP_INFO: AppInfo = AppInfo {
@@ -73,7 +73,11 @@ impl App {
         self.config.config_path.parent().unwrap().join(name)
     }
 
-    pub fn add_list<S: Into<String>, P: Into<PathBuf>>(&mut self, name: S, path: P) -> Result<()> {
+    pub fn attach_list<S: Into<String>, P: Into<PathBuf>>(
+        &mut self,
+        name: S,
+        path: P,
+    ) -> Result<()> {
         let name = name.into();
         let path = path.into();
 
@@ -93,7 +97,7 @@ impl App {
         Ok(())
     }
 
-    pub fn rm_list(&mut self, name: &str) -> Result<()> {
+    pub fn detach_list(&mut self, name: &str) -> Result<()> {
         self.lists
             .remove(name)
             .ok_or_else(|| NoSuchListExists(name.into()))
@@ -127,15 +131,33 @@ impl App {
             .context(ErrorKind::GetList)?)
     }
 
-    pub fn cli_show<Q: Into<Query>>(&self, query: Q) {
+    pub fn cli_show_list<L: List>(&self, list: &L, query: &Query, plain: bool) {
+        let mut iter = query.select(list).into_iter().peekable();
+
+        while let Some(id) = iter.next() {
+            let item = list.get(&id).unwrap();
+
+            println!(
+                "{}{}: '{}'",
+                if plain {
+                    ""
+                } else if iter.peek().is_none() {
+                    "╰─ "
+                } else {
+                    "├─ "
+                },
+                id,
+                item.get_name()
+            );
+        }
+    }
+
+    pub fn cli_show_all<Q: Into<Query>>(&self, query: Q, plain: bool) {
         let query = query.into();
 
         for (name, list) in self.lists.iter() {
-            println!("{}: {}", name, list.get_path().to_str().unwrap_or("..."));
-            for id in query.select(list) {
-                let item = list.get(&id).unwrap();
-                println!("\t{}", item.get_name());
-            }
+            println!("{}:", name);
+            self.cli_show_list(list, &query, plain);
         }
     }
 
@@ -162,38 +184,83 @@ pub fn run_cli() -> Result<App> {
                 .required(false)
                 .short("c"),
         )
-        .subcommand(
-            Cmd::with_name("attach")
-                .about("Attaches a new list to TodoQueue")
-                .arg(Arg::with_name("NAME").help("The name of the list to add").takes_value(true).required(true))
+        .subcommand(Cmd::with_name("list")
+            .alias("lists").alias("l")
+            .help("Commands for adding, removeing and modifying lists")
+            .subcommand(
+                Cmd::with_name("attach")
+                    .alias("new").alias("a").alias("n")
+                    .about("Attaches a new list to TodoQueue")
+                    .arg(
+                        Arg::with_name("NAME")
+                            .help("The name of the list to add")
+                            .takes_value(true)
+                    )
+                    .arg(
+                        Arg::with_name("PATH")
+                            .help("Specify the path the the list's state file. If no path is given, the list will be placed at APP_CONFIG_DIR/LIST_NAME.json")
+                            .takes_value(true),
+                    )
+                    .arg(
+                        Arg::with_name("DEFAULT")
+                            .help("Sets this list as the default list")
+                            .takes_value(false)
+                            .long("--default")
+                            .short("-d"),
+                    ),
+            )
+            .subcommand(
+                Cmd::with_name("detach")
+                    .alias("d").alias("delete")
+                    .about("Detaches a list from TodoQueue")
+                    .arg(
+                        Arg::with_name("NAME")
+                            .help("The name of the list to remove")
+                            .takes_value(true)
+                            .required(true)
+                    )
+            )
+            .subcommand(
+                Cmd::with_name("show")
                 .arg(
-                    Arg::with_name("PATH")
-                        .help("Specify the path the the list's state file. If no path is given, the list will be placed at APP_CONFIG_DIR/LIST_NAME.json")
-                        .takes_value(true),
+                    Arg::with_name("QUERY")
+                        .takes_value(true)
+                        .min_values(1)
                 )
-                .arg(
-                    Arg::with_name("DEFAULT")
-                        .help("Sets this list as the default list")
-                        .takes_value(false)
-                        .long("--default")
-                        .short("-d"),
-                ),
+            )
         )
         .subcommand(
-            Cmd::with_name("detach")
-                .about("Detaches a list from TodoQueue")
-                .arg(Arg::with_name("NAME").help("The name of the list to remove").takes_value(true).required(true))
-        )
-        .subcommand(Cmd::with_name("show").arg(Arg::with_name("QUERY").required(false).takes_value(true).last(true)))
-        .subcommand(Cmd::with_name("add")
-        .about("Adds a new item to a list")
-        .arg(
-            Arg::with_name("LIST")
-            .help("The name of the list to add an item to.")
-            .long("--list").short("-l").takes_value(true))
+            Cmd::with_name("todo")
+            .alias("t").alias("do").alias("td")
+            .about("Add, remove or modify todolist items")
             .arg(
-                Arg::with_name("ITEM").help("The specification of the item to add").required(true).takes_value(true))
-                )
+                Arg::with_name("LIST")
+                    .help("The name of the list to add an item to.")
+                    .long("--list").short("-l").takes_value(true)
+            )
+            .subcommand(
+                Cmd::with_name("add")
+                    .alias("a")
+                    .about("Add, remove or modify todolist items")
+                    .arg(
+                        Arg::with_name("ITEM")
+                            .help("The specification of the item to add")
+                            .required(true)
+                            .takes_value(true)
+                            .min_values(1)
+                    )
+            )
+            .subcommand(
+                Cmd::with_name("delete")
+                    .alias("d").alias("rm").alias("remove")
+                    .arg(
+                        Arg::with_name("QUERY")
+                            .required(true)
+                            .takes_value(true)
+                            .min_values(1)
+                    )
+            )
+        )
         .get_matches();
 
     // Get the path to use for configuration
@@ -211,36 +278,63 @@ pub fn run_cli() -> Result<App> {
 
     // Launch the application
     let mut app = app_config.launch().context(ErrorKind::Cli)?;
+    if let Some(list_cmd) = cli.subcommand_matches("list") {
+        if let Some(add_args) = list_cmd.subcommand_matches("attach") {
+            let name = add_args.value_of("NAME").unwrap_or("default");
+            let list_path = add_args
+                .value_of("PATH")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| {
+                    let mut path = app.get_file_in_config(name);
+                    path.set_extension("json");
+                    path
+                });
 
-    if let Some(add_args) = cli.subcommand_matches("attach") {
-        let name = add_args.value_of("NAME").unwrap();
-        let list_path = add_args
-            .value_of("PATH")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| {
-                let mut path = app.get_file_in_config(name);
-                path.set_extension("json");
-                path
-            });
+            app.attach_list(name, list_path).context(ErrorKind::Cli)?;
+            app.save().context(ErrorKind::Cli)?;
+        } else if let Some(rm_args) = list_cmd.subcommand_matches("detach") {
+            let name = rm_args.value_of("NAME").unwrap();
 
-        app.add_list(name, list_path).context(ErrorKind::Cli)?;
-        app.save().context(ErrorKind::Cli)?;
-    } else if let Some(rm_args) = cli.subcommand_matches("detach") {
-        let name = rm_args.value_of("NAME").unwrap();
+            app.detach_list(name).context(ErrorKind::Cli)?;
+            app.save().context(ErrorKind::Cli)?;
+        } else if let Some(show) = list_cmd.subcommand_matches("show") {
+            let query_str = if let Some(values) = show.values_of("QUERY") {
+                values.collect::<Vec<_>>().join(" ")
+            } else {
+                "all".to_string()
+            };
+            let query = script::parse_query(&query_str).context(ErrorKind::Cli)?;
 
-        app.rm_list(name).context(ErrorKind::Cli)?;
-        app.save().context(ErrorKind::Cli)?;
-    } else if let Some(show) = cli.subcommand_matches("show") {
-        let query_str = show.value_of("QUERY").unwrap_or("all");
-        let query = script::parse_query(query_str).unwrap();
-        app.cli_show(query);
-    } else if let Some(add) = cli.subcommand_matches("add") {
-        let (_, list) = app.get_list_mut(add.value_of("LIST").map(String::from))
+            app.cli_show_all(query, false);
+        }
+    } else if let Some(todo_cmd) = cli.subcommand_matches("todo") {
+        let (_, list) = app.get_list_mut(todo_cmd.value_of("LIST").map(String::from))
             .context(ErrorKind::Cli)?;
-        let item = ItemDesc::from(add.value_of("ITEM").unwrap().to_string());
-        list.add(item);
+        if let Some(add_cmd) = todo_cmd.subcommand_matches("add") {
+            let item = ItemDesc::from(
+                add_cmd
+                    .values_of("ITEM")
+                    .unwrap()
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            );
+            list.add(item);
 
-        list.save_pretty().context(ErrorKind::Cli)?;
+            list.save_pretty().context(ErrorKind::Cli)?;
+        } else if let Some(delete_cmd) = todo_cmd.subcommand_matches("delete") {
+            let query_str = delete_cmd
+                .values_of("QUERY")
+                .unwrap()
+                .collect::<Vec<_>>()
+                .join(" ");
+            let query = script::parse_query(&query_str).context(ErrorKind::Cli)?;
+
+            for id in query.select(list) {
+                list.remove(&id);
+            }
+
+            list.save_pretty().context(ErrorKind::Cli)?;
+        }
     }
 
     Ok(app)

@@ -4,6 +4,7 @@ use todo_queue_lib::query::Filter;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use serde_json;
+use rand;
 use error::*;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -74,8 +75,10 @@ impl List for NativeList {
     type Item = NativeItem;
 
     fn add(&mut self, item: ItemDesc) -> ItemId {
-        let id = ItemId::new_v4();
-        self.items.push((id, item.into()));
+        let item: Self::Item = item.into();
+        let id = rand::random();
+
+        self.items.push((id, item));
         id
     }
 
@@ -102,7 +105,7 @@ impl List for NativeList {
     fn select(&self, filter: &Filter) -> Vec<ItemId> {
         self.items
             .iter()
-            .filter(|&&(_, ref item)| filter.matches(item))
+            .filter(|&&(ref id, ref item)| filter.matches(id, item))
             .map(|m| m.0)
             .collect()
     }
