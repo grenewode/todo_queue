@@ -6,6 +6,7 @@ cache: cargo
 env:
   - RUST_PROJECT_DIR: todo_queue_cli
   - RUST_PROJECT_DIR: todo_queue_lib
+before_script: cd $RUST_PROJECT_DIR
 script:
-  - cd $RUST_PROJECT_DIR && cargo build --verbose --all
-  - cd $RUST_PROJECT_DIR && cargo test --verbose --all
+  - cargo build --verbose --all
+  - cargo test --verbose --all
